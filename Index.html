@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Тренажёр таблицы умножения</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .game-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .question {
+            font-size: 28px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        input {
+            font-size: 20px;
+            padding: 12px;
+            width: 100px;
+            text-align: center;
+            border: none;
+            border-radius: 8px;
+            margin: 10px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        .score {
+            font-size: 20px;
+            margin: 15px 0;
+        }
+        #result {
+            font-size: 18px;
+            margin: 15px 0;
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎯 Тренажёр умножения</h1>
+        <div class="score">Очки: <span id="score">0</span></div>
+        <div class="question" id="question">Сколько будет?</div>
+        <input type="number" id="answer" placeholder="Ответ">
+        <br>
+        <button onclick="checkAnswer()">Проверить</button>
+        <button onclick="newQuestion()">Новый пример</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        let score = 0;
+        let num1, num2, correctAnswer;
+
+        function generateQuestion() {
+            num1 = Math.floor(Math.random() * 10) + 1;
+            num2 = Math.floor(Math.random() * 10) + 1;
+            correctAnswer = num1 * num2;
+            document.getElementById('question').textContent = `${num1} × ${num2} = ?`;
+            document.getElementById('answer').value = '';
+            document.getElementById('answer').focus();
+        }
+
+        function checkAnswer() {
+            const userAnswer = parseInt(document.getElementById('answer').value);
+            const resultElement = document.getElementById('result');
+            
+            if (isNaN(userAnswer)) {
+                resultElement.textContent = 'Введите число!';
+                resultElement.style.color = 'orange';
+                return;
+            }
+
+            if (userAnswer === correctAnswer) {
+                score += 10;
+                resultElement.textContent = '✅ Правильно! +10 очков';
+                resultElement.style.color = 'lightgreen';
+            } else {
+                resultElement.textContent = `❌ Неправильно. Правильно: ${correctAnswer}`;
+                resultElement.style.color = 'pink';
+            }
+            
+            document.getElementById('score').textContent = score;
+            setTimeout(generateQuestion, 2000);
+        }
+
+        function newQuestion() {
+            generateQuestion();
+            document.getElementById('result').textContent = '';
+        }
+
+        // Enter для проверки ответа
+        document.getElementById('answer').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+
+        // Начать игру
+        generateQuestion();
+    </script>
+</body>
+</html>
