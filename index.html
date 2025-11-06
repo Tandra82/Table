@@ -125,16 +125,23 @@
             transition: transform 0.2s;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             animation: float 3s infinite ease-in-out;
-        }
-
-        .correct {
-            background: #06d6a0;
-            color: white;
-        }
-
-        .incorrect {
             background: #ef476f;
             color: white;
+        }
+
+        .feedback {
+            position: absolute;
+            font-size: 4rem;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .happy {
+            animation: happy 1.5s ease-out forwards;
+        }
+
+        .explosion {
+            animation: explosion 1s ease-out forwards;
         }
 
         .results {
@@ -154,6 +161,18 @@
         @keyframes float {
             0%, 100% { transform: translateY(0) rotate(0deg); }
             50% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        @keyframes happy {
+            0% { transform: scale(0.5) rotate(0deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        @keyframes explosion {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.5); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         .floating-object {
@@ -244,6 +263,7 @@
         let totalGameTime = 0;
         let questionStartTime;
         let answers = [];
+        let correctAnswerValue;
 
         // Начало игры
         startBtn.addEventListener('click', startGame);
@@ -276,13 +296,13 @@
             // Генерация вопроса
             const num1 = Math.floor(Math.random() * 10) + 1;
             const num2 = Math.floor(Math.random() * 10) + 1;
-            const correctAnswer = num1 * num2;
+            correctAnswerValue = num1 * num2;
             
             // Отображение вопроса
             questionElement.textContent = `${num1} × ${num2} = ?`;
             
             // Генерация ответов (1 правильный и 3 неправильных)
-            answers.push(correctAnswer);
+            answers.push(correctAnswerValue);
             
             // Генерация неправильных ответов
             while (answers.length < 4) {
@@ -290,7 +310,7 @@
                 do {
                     // Генерация ответа в пределах разумного диапазона
                     const offset = Math.floor(Math.random() * 10) - 5;
-                    wrongAnswer = correctAnswer + offset;
+                    wrongAnswer = correctAnswerValue + offset;
                 } while (wrongAnswer <= 0 || answers.includes(wrongAnswer));
                 
                 answers.push(wrongAnswer);
@@ -300,7 +320,7 @@
             shuffleArray(answers);
             
             // Создание плавающих элементов ответов
-            createFloatingAnswers(answers, correctAnswer);
+            createFloatingAnswers(answers);
             
             // Запуск таймера
             timeLeft = 5;
@@ -319,12 +339,12 @@
             }, 100);
         }
 
-        function createFloatingAnswers(answers, correctAnswer) {
+        function createFloatingAnswers(answers) {
             const gameAreaRect = gameArea.getBoundingClientRect();
             
             answers.forEach((answer, index) => {
                 const answerElement = document.createElement('div');
-                answerElement.className = `answer ${answer === correctAnswer ? 'correct' : 'incorrect'}`;
+                answerElement.className = 'answer';
                 answerElement.textContent = answer;
                 
                 // Случайная начальная позиция
@@ -340,19 +360,40 @@
                 
                 // Обработчик клика
                 answerElement.addEventListener('click', () => {
-                    handleAnswerClick(answer === correctAnswer);
+                    handleAnswerClick(answer === correctAnswerValue, answerElement);
                 });
                 
                 gameArea.appendChild(answerElement);
             });
         }
 
-        function handleAnswerClick(isCorrect) {
+        function handleAnswerClick(isCorrect, element) {
             clearInterval(gameTimer);
             
             // Расчет времени, затраченного на вопрос
             const questionTime = (Date.now() - questionStartTime) / 1000;
             totalGameTime += questionTime;
+            
+            // Получаем позицию элемента для отображения реакции
+            const rect = element.getBoundingClientRect();
+            const gameAreaRect = gameArea.getBoundingClientRect();
+            
+            // Создаем элемент обратной связи
+            const feedback = document.createElement('div');
+            feedback.className = `feedback ${isCorrect ? 'happy' : 'explosion'}`;
+            feedback.textContent = isCorrect ? '😊' : '💥';
+            
+            // Позиционируем элемент обратной связи
+            feedback.style.left = `${rect.left - gameAreaRect.left + rect.width/2}px`;
+            feedback.style.top = `${rect.top - gameAreaRect.top + rect.height/2}px`;
+            feedback.style.transform = 'translate(-50%, -50%)';
+            
+            // Добавляем в игровую область
+            gameArea.appendChild(feedback);
+            
+            // Удаляем все ответы
+            const allAnswers = document.querySelectorAll('.answer');
+            allAnswers.forEach(answer => answer.remove());
             
             if (isCorrect) {
                 correctAnswers++;
@@ -365,21 +406,34 @@
             updateGameInfo();
             
             if (currentQuestion <= totalQuestions) {
-                setTimeout(startQuestion, 1000);
+                setTimeout(startQuestion, 1500);
             } else {
-                endGame();
+                setTimeout(endGame, 1500);
             }
         }
 
         function handleTimeOut() {
+            // Создаем элемент обратной связи для таймаута
+            const feedback = document.createElement('div');
+            feedback.className = 'feedback explosion';
+            feedback.textContent = '⏰';
+            feedback.style.left = '50%';
+            feedback.style.top = '50%';
+            feedback.style.transform = 'translate(-50%, -50%)';
+            gameArea.appendChild(feedback);
+            
+            // Удаляем все ответы
+            const allAnswers = document.querySelectorAll('.answer');
+            allAnswers.forEach(answer => answer.remove());
+            
             mistakes++;
             currentQuestion++;
             updateGameInfo();
             
             if (currentQuestion <= totalQuestions) {
-                setTimeout(startQuestion, 1000);
+                setTimeout(startQuestion, 1500);
             } else {
-                endGame();
+                setTimeout(endGame, 1500);
             }
         }
 
