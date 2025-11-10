@@ -178,6 +178,8 @@
             display: flex;      /* Используем flexbox */
             align-items: center; /* Выравниваем по вертикали */
             justify-content: center; /* Выравниваем по горизонтали */
+            /* ОГРАНИЧИВАЕМ АНИМАЦИЮ ВНУТРИ БЕЗОПАСНОЙ ЗОНЫ */
+            transform-origin: center; /* Анимация происходит от центра элемента */
         }
 
         /*
@@ -226,14 +228,20 @@
 
         /*
           АНИМАЦИЯ ПЛАВАНИЯ ОТВЕТОВ
-          Ответы плавают вверх-вниз и немного поворачиваются
+          ОГРАНИЧИВАЕМ АНИМАЦИЮ, ЧТОБЫ ПЛАШКИ НЕ ВЫХОДИЛИ ЗА ПРЕДЕЛЫ СВОИХ ЗОН
         */
         @keyframes float {
             0%, 100% { 
-                transform: translateY(0) rotate(0deg); /* Начальное и конечное положение */
+                transform: translate(0, 0) rotate(0deg); /* Начальное и конечное положение */
+            }
+            25% { 
+                transform: translate(5px, -5px) rotate(2deg); /* Небольшое движение */
             }
             50% { 
-                transform: translateY(-10px) rotate(5deg); /* Поднимаем и поворачиваем */
+                transform: translate(0, -8px) rotate(0deg); /* Поднимаем */
+            }
+            75% { 
+                transform: translate(-5px, -5px) rotate(-2deg); /* Небольшое движение */
             }
         }
 
@@ -512,8 +520,8 @@
 
         /*
           ФУНКЦИЯ CREATEFLOATINGANSWERS - СОЗДАНИЕ ПЛАВАЮЩИХ ОТВЕТОВ
-          Эта функция создаёт 4 плавающих ответа и размещает их так, чтобы они не пересекались
-          ИСПРАВЛЕННАЯ ВЕРСИЯ: используем сетку для гарантированного размещения без пересечений
+          ИСПРАВЛЕННАЯ ВЕРСИЯ: Гарантирует, что плашки никогда не касаются друг друга
+          Мы разделим игровую область на 4 равные зоны и разместим по одному ответу в каждой зоне
         */
         function createFloatingAnswers(answers) {
             // Получаем размеры игровой области
@@ -523,22 +531,41 @@
             const answerWidth = 120;
             const answerHeight = 60;
             
-            // Создаем сетку 2x2 для размещения 4 ответов
-            // Это гарантирует, что ответы не будут пересекаться
-            const gridPositions = [
-                // Верхний левый угол
-                { x: answerWidth * 0.5, y: answerHeight * 0.5 },
-                // Верхний правый угол
-                { x: gameAreaRect.width - answerWidth * 1.5, y: answerHeight * 0.5 },
-                // Нижний левый угол
-                { x: answerWidth * 0.5, y: gameAreaRect.height - answerHeight * 1.5 },
-                // Нижний правый угол
-                { x: gameAreaRect.width - answerWidth * 1.5, y: gameAreaRect.height - answerHeight * 1.5 }
+            // Создаем 4 безопасные зоны в игровой области
+            // Каждая зона - это четверть игрового поля с достаточными отступами
+            const zones = [
+                {
+                    // Верхняя левая зона
+                    x: 20, // Отступ от левого края
+                    y: 20, // Отступ от верхнего края
+                    width: gameAreaRect.width / 2 - 30, // Половина ширины минус отступ
+                    height: gameAreaRect.height / 2 - 30 // Половина высоты минус отступ
+                },
+                {
+                    // Верхняя правая зона
+                    x: gameAreaRect.width / 2 + 10, // Начинается с середины плюс отступ
+                    y: 20, // Отступ от верхнего края
+                    width: gameAreaRect.width / 2 - 30, // Половина ширины минус отступ
+                    height: gameAreaRect.height / 2 - 30 // Половина высоты минус отступ
+                },
+                {
+                    // Нижняя левая зона
+                    x: 20, // Отступ от левого края
+                    y: gameAreaRect.height / 2 + 10, // Начинается с середины плюс отступ
+                    width: gameAreaRect.width / 2 - 30, // Половина ширины минус отступ
+                    height: gameAreaRect.height / 2 - 30 // Половина высоты минус отступ
+                },
+                {
+                    // Нижняя правая зона
+                    x: gameAreaRect.width / 2 + 10, // Начинается с середины плюс отступ
+                    y: gameAreaRect.height / 2 + 10, // Начинается с середины плюс отступ
+                    width: gameAreaRect.width / 2 - 30, // Половина ширины минус отступ
+                    height: gameAreaRect.height / 2 - 30 // Половина высоты минус отступ
+                }
             ];
             
-            // Добавляем небольшое случайное смещение к каждой позиции, чтобы ответы не стояли строго по углам
-            // Но сохраняем достаточное расстояние между ними
-            const randomOffset = 30; // Максимальное смещение в пикселях
+            // Перемешиваем зоны, чтобы ответы не всегда были в одном порядке
+            shuffleArray(zones);
             
             // Для каждого ответа в массиве
             answers.forEach((answer, index) => {
@@ -549,21 +576,25 @@
                 // Записываем в него число-ответ
                 answerElement.textContent = answer;
                 
-                // Берем позицию из сетки и добавляем случайное смещение
-                const basePosition = gridPositions[index];
-                const x = basePosition.x + (Math.random() * randomOffset * 2 - randomOffset);
-                const y = basePosition.y + (Math.random() * randomOffset * 2 - randomOffset);
+                // Берем соответствующую зону для этого ответа
+                const zone = zones[index];
                 
-                // Убеждаемся, что ответ не выходит за границы игровой области
-                const safeX = Math.max(10, Math.min(x, gameAreaRect.width - answerWidth - 10));
-                const safeY = Math.max(10, Math.min(y, gameAreaRect.height - answerHeight - 10));
+                // Вычисляем случайную позицию внутри зоны
+                // Учитываем размеры плашки, чтобы она не выходила за границы зоны
+                const maxX = zone.x + zone.width - answerWidth;
+                const maxY = zone.y + zone.height - answerHeight;
+                
+                // Генерируем случайные координаты внутри зоны
+                const x = zone.x + Math.random() * (maxX - zone.x);
+                const y = zone.y + Math.random() * (maxY - zone.y);
                 
                 // Устанавливаем позицию элемента на экране
-                answerElement.style.left = `${safeX}px`;
-                answerElement.style.top = `${safeY}px`;
+                answerElement.style.left = `${x}px`;
+                answerElement.style.top = `${y}px`;
                 
-                // Добавляем анимацию плавания с случайной скоростью
-                const duration = 3 + Math.random() * 4; // От 3 до 7 секунд
+                // Добавляем анимацию плавания
+                // У каждой плашки своя скорость анимации для разнообразия
+                const duration = 3 + Math.random() * 2; // От 3 до 5 секунд
                 answerElement.style.animation = `float ${duration}s infinite ease-in-out`;
                 
                 // Добавляем обработчик клика на ответ
@@ -714,4 +745,4 @@
         }
     </script>
 </body>
-            </html>
+    </html>
