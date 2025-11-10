@@ -513,17 +513,32 @@
         /*
           ФУНКЦИЯ CREATEFLOATINGANSWERS - СОЗДАНИЕ ПЛАВАЮЩИХ ОТВЕТОВ
           Эта функция создаёт 4 плавающих ответа и размещает их так, чтобы они не пересекались
+          ИСПРАВЛЕННАЯ ВЕРСИЯ: используем сетку для гарантированного размещения без пересечений
         */
         function createFloatingAnswers(answers) {
             // Получаем размеры игровой области
             const gameAreaRect = gameArea.getBoundingClientRect();
-            // Массив для хранения информации о размещённых ответах
-            const placedAnswers = [];
-            // Фиксированные размеры плашек с ответами
+            
+            // Размеры плашки с ответом
             const answerWidth = 120;
             const answerHeight = 60;
-            // Минимальное расстояние между ответами
-            const padding = 20;
+            
+            // Создаем сетку 2x2 для размещения 4 ответов
+            // Это гарантирует, что ответы не будут пересекаться
+            const gridPositions = [
+                // Верхний левый угол
+                { x: answerWidth * 0.5, y: answerHeight * 0.5 },
+                // Верхний правый угол
+                { x: gameAreaRect.width - answerWidth * 1.5, y: answerHeight * 0.5 },
+                // Нижний левый угол
+                { x: answerWidth * 0.5, y: gameAreaRect.height - answerHeight * 1.5 },
+                // Нижний правый угол
+                { x: gameAreaRect.width - answerWidth * 1.5, y: gameAreaRect.height - answerHeight * 1.5 }
+            ];
+            
+            // Добавляем небольшое случайное смещение к каждой позиции, чтобы ответы не стояли строго по углам
+            // Но сохраняем достаточное расстояние между ними
+            const randomOffset = 30; // Максимальное смещение в пикселях
             
             // Для каждого ответа в массиве
             answers.forEach((answer, index) => {
@@ -534,32 +549,18 @@
                 // Записываем в него число-ответ
                 answerElement.textContent = answer;
                 
-                // Пытаемся найти позицию без пересечений с другими ответами
-                let position; // Будет хранить координаты x и y
-                let attempts = 0; // Счётчик попыток
-                const maxAttempts = 100; // Максимальное количество попыток
+                // Берем позицию из сетки и добавляем случайное смещение
+                const basePosition = gridPositions[index];
+                const x = basePosition.x + (Math.random() * randomOffset * 2 - randomOffset);
+                const y = basePosition.y + (Math.random() * randomOffset * 2 - randomOffset);
                 
-                // Пока есть пересечения и не превышено максимальное количество попыток
-                do {
-                    // Генерируем случайные координаты внутри игровой области
-                    position = {
-                        x: Math.random() * (gameAreaRect.width - answerWidth),
-                        y: Math.random() * (gameAreaRect.height - answerHeight)
-                    };
-                    attempts++; // Увеличиваем счётчик попыток
-                } while (hasCollision(position, placedAnswers, answerWidth, answerHeight, padding) && attempts < maxAttempts);
-                
-                // Сохраняем информацию о размещённом ответе
-                placedAnswers.push({
-                    x: position.x,
-                    y: position.y,
-                    width: answerWidth,
-                    height: answerHeight
-                });
+                // Убеждаемся, что ответ не выходит за границы игровой области
+                const safeX = Math.max(10, Math.min(x, gameAreaRect.width - answerWidth - 10));
+                const safeY = Math.max(10, Math.min(y, gameAreaRect.height - answerHeight - 10));
                 
                 // Устанавливаем позицию элемента на экране
-                answerElement.style.left = `${position.x}px`;
-                answerElement.style.top = `${position.y}px`;
+                answerElement.style.left = `${safeX}px`;
+                answerElement.style.top = `${safeY}px`;
                 
                 // Добавляем анимацию плавания с случайной скоростью
                 const duration = 3 + Math.random() * 4; // От 3 до 7 секунд
@@ -574,24 +575,6 @@
                 // Добавляем ответ в игровую область
                 gameArea.appendChild(answerElement);
             });
-        }
-
-        /*
-          ФУНКЦИЯ HASCOLLISION - ПРОВЕРКА ПЕРЕСЕЧЕНИЙ
-          Проверяет, пересекается ли новая позиция с уже размещёнными элементами
-        */
-        function hasCollision(position, placedAnswers, width, height, padding) {
-            // Проверяем каждый уже размещённый элемент
-            for (const placed of placedAnswers) {
-                // Проверяем пересечение по оси X и Y с учётом отступа
-                if (position.x < placed.x + placed.width + padding &&
-                    position.x + width + padding > placed.x &&
-                    position.y < placed.y + placed.height + padding &&
-                    position.y + height + padding > placed.y) {
-                    return true; // Есть пересечение
-                }
-            }
-            return false; // Нет пересечений
         }
 
         /*
@@ -731,4 +714,4 @@
         }
     </script>
 </body>
-                </html>
+            </html>
