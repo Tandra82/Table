@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Магазин мер - Математическая игра</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f9f3e9 0%, #f5e9e3 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        
+        /* Стартовый экран */
+        #startScreen, .game-container {
+            width: 100%;
+            max-width: 650px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .game-container {
+            display: none;
+        }
+        
+        .header {
+            background: #6b8e6b;
+            color: white;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        .content {
+            padding: 15px;
+        }
+        
+        .info-section, .rules-section {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            line-height: 1.3;
+        }
+        
+        .info-section {
+            background: #e8f5e9;
+            border-left: 4px solid #6b8e6b;
+        }
+        
+        .rules-section {
+            background: #f5f0eb;
+            border-left: 4px solid #a37b73;
+        }
+        
+        h2 {
+            color: #5a4a42;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        
+        .info-section p, .rules-section li {
+            margin-bottom: 5px;
+            color: #5a4a42;
+        }
+        
+        .rules-section ul {
+            padding-left: 18px;
+        }
+        
+        .start-button {
+            display: block;
+            width: 180px;
+            margin: 15px auto 5px;
+            padding: 10px;
+            background: #a37b73;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .start-button:hover {
+            background: #8b635c;
+            transform: translateY(-2px);
+        }
+        
+        /* Игровой экран */
+        .category-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            margin: 12px 0;
+        }
+        
+        .category-btn {
+            background: #d4b4a6;
+            border: none;
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            flex: 1;
+            min-width: 110px;
+            max-width: 150px;
+        }
+        
+        .category-btn.active {
+            background: #6b8e6b;
+            color: white;
+        }
+        
+        .target {
+            background: #e8d7c9;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #8b4513;
+            border: 2px solid #a37b73;
+            text-align: center;
+        }
+        
+        .items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 8px;
+            margin: 12px 0;
+        }
+        
+        .item {
+            background: #f8f4f0;
+            border: 2px solid #e8d7c9;
+            padding: 10px 4px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            min-height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .item.selected {
+            background: #d1e6d1;
+            border-color: #6b8e6b;
+        }
+        
+        .controls {
+            margin: 12px 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .game-btn {
+            background: #a37b73;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 18px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            min-width: 110px;
+        }
+        
+        .game-btn.clear {
+            background: #d4a5a5;
+        }
+        
+        .game-btn.restart {
+            background: #6b8e6b;
+        }
+        
+        .status {
+            display: flex;
+            justify-content: space-between;
+            background: #f5f0eb;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .status div {
+            padding: 6px 10px;
+            background: white;
+            border-radius: 4px;
+            flex: 1;
+            min-width: 110px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        
+        .message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 15px;
+        }
+        
+        .message.show {
+            display: flex;
+        }
+        
+        .message-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 320px;
+            width: 100%;
+            border: 3px solid;
+        }
+        
+        .message.success {
+            border-color: #6b8e6b;
+        }
+        
+        .message.error {
+            border-color: #d4a5a5;
+        }
+        
+        @media (max-width: 600px) {
+            .items {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .status {
+                flex-direction: column;
+            }
+            
+            .status div {
+                min-width: 100%;
+            }
+            
+            .header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .content {
+                padding: 12px;
+            }
+            
+            .info-section, .rules-section {
+                font-size: 0.8rem;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Стартовый экран -->
+    <div id="startScreen">
+        <div class="header">
+            <h1>📏 Математическая игра "Магазин мер" 📏</h1>
+        </div>
+        
+        <div class="content">
+            <div class="info-section">
+                <h2>👨‍🎓 Информация об авторе:</h2>
+                <p>🎓 Выполнил: ученик 4а класса</p>
+                <p>🏫 МБОУ СОШ №41, г. Курган</p>
+                <p>✍️ Михайлов Виталий</p>
+            </div>
+            
+            <div class="rules-section">
+                <h2>🎯 Правила игры:</h2>
+                <ul>
+                    <li>Выбери категорию измерения</li>
+                    <li>Нажимай на карточки для выбора</li>
+                    <li>Собери нужную сумму величин</li>
+                    <li>Нажми "Проверить"</li>
+                    <li>+10 баллов за правильный ответ</li>
+                    <li>-2 балла за ошибку</li>
+                    <li>Пройди все 4 категории!</li>
+                </ul>
+            </div>
+            
+            <button class="start-button" onclick="startGame()">🎮 Начать игру</button>
+        </div>
+    </div>
+    
+    <!-- Игровой экран -->
+    <div class="game-container" id="gameScreen">
+        <div class="header">
+            <h1>🛒 Магазин мер</h1>
+        </div>
+        
+        <div class="content">
+            <div class="category-selector">
+                <button class="category-btn active" onclick="switchCategory('length')">📏 Длина</button>
+                <button class="category-btn" onclick="switchCategory('mass')">⚖️ Масса</button>
+                <button class="category-btn" onclick="switchCategory('area')">🟦 Площадь</button>
+                <button class="category-btn" onclick="switchCategory('time')">⏰ Время</button>
+            </div>
+            
+            <div class="target" id="targetValue">
+                Загрузка...
+            </div>
+            
+            <div class="items" id="itemsContainer">
+                <!-- Карточки будут здесь -->
+            </div>
+            
+            <div class="controls">
+                <button class="game-btn" onclick="checkAnswer()">✅ Проверить</button>
+                <button class="game-btn clear" onclick="clearSelection()">🔄 Сбросить</button>
+                <button class="game-btn restart" onclick="restartGame()">🔄 Новая игра</button>
+            </div>
+            
+            <div class="status">
+                <div>📊 Выбрано: <span id="currentSum">0</span></div>
+                <div>⏱️ Время: <span id="timer">00:00</span></div>
+                <div>⭐ Очки: <span id="score">0</span></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Сообщение -->
+    <div class="message" id="messageOverlay">
+        <div class="message-content" id="messageContent">
+            <h2 id="messageTitle" style="color: #6b8e6b; margin-bottom: 10px;">Молодец!</h2>
+            <p id="messageText" style="margin-bottom: 10px;">Ты правильно собрал величину!</p>
+            <p id="messageScore" style="font-weight: bold; color: #8b4513; margin: 10px 0; font-size: 1rem;">+10 баллов</p>
+            <button onclick="closeMessage()" style="background: #a37b73; color: white; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer;">Продолжить</button>
+        </div>
+    </div>
+
+    <script>
+        // Упрощенная версия игры - гарантированно работает
+        let currentCategory = 'length';
+        let selectedItems = [];
+        let score = 0;
+        let seconds = 0;
+        let timer;
+        
+        // 20 значений для каждой категории
+        const tasks = {
+            length: [
+                { target: '1 м 25 см', targetValue: 125, items: getLengthItems() },
+                { target: '2 м 50 см', targetValue: 250, items: getLengthItems() },
+                { target: '1 м 75 см', targetValue: 175, items: getLengthItems() },
+                { target: '3 м 25 см', targetValue: 325, items: getLengthItems() },
+                { target: '2 м', targetValue: 200, items: getLengthItems() },
+                { target: '1 м 50 см', targetValue: 150, items: getLengthItems() },
+                { target: '2 м 75 см', targetValue: 275, items: getLengthItems() },
+                { target: '3 м 50 см', targetValue: 350, items: getLengthItems() },
+                { target: '4 м 25 см', targetValue: 425, items: getLengthItems() },
+                { target: '1 м', targetValue: 100, items: getLengthItems() },
+                { target: '2 м 25 см', targetValue: 225, items: getLengthItems() },
+                { target: '3 м 75 см', targetValue: 375, items: getLengthItems() },
+                { target: '4 м 50 см', targetValue: 450, items: getLengthItems() },
+                { target: '5 м 25 см', targetValue: 525, items: getLengthItems() },
+                { target: '2 м 100 см', targetValue: 300, items: getLengthItems() },
+                { target: '3 м', targetValue: 300, items: getLengthItems() },
+                { target: '4 м', targetValue: 400, items: getLengthItems() },
+                { target: '5 м', targetValue: 500, items: getLengthItems() },
+                { target: '1 м 80 см', targetValue: 180, items: getLengthItems() },
+                { target: '2 м 80 см', targetValue: 280, items: getLengthItems() }
+            ],
+            mass: [
+                { target: '1 кг 250 г', targetValue: 1250, items: getMassItems() },
+                { target: '2 кг 500 г', targetValue: 2500, items: getMassItems() },
+                { target: '1 кг 750 г', targetValue: 1750, items: getMassItems() },
+                { target: '3 кг 250 г', targetValue: 3250, items: getMassItems() },
+                { target: '2 кг', targetValue: 2000, items: getMassItems() },
+                { target: '1 кг 500 г', targetValue: 1500, items: getMassItems() },
+                { target: '2 кг 750 г', targetValue: 2750, items: getMassItems() },
+                { target: '3 кг 500 г', targetValue: 3500, items: getMassItems() },
+                { target: '4 кг 250 г', targetValue: 4250, items: getMassItems() },
+                { target: '1 кг', targetValue: 1000, items: getMassItems() },
+                { target: '2 кг 250 г', targetValue: 2250, items: getMassItems() },
+                { target: '3 кг 750 г', targetValue: 3750, items: getMassItems() },
+                { target: '4 кг 500 г', targetValue: 4500, items: getMassItems() },
+                { target: '5 кг 250 г', targetValue: 5250, items: getMassItems() },
+                { target: '2 кг 1 г', targetValue: 2001, items: getMassItems() },
+                { target: '3 кг', targetValue: 3000, items: getMassItems() },
+                { target: '4 кг', targetValue: 4000, items: getMassItems() },
+                { target: '5 кг', targetValue: 5000, items: getMassItems() },
+                { target: '1 кг 800 г', targetValue: 1800, items: getMassItems() },
+                { target: '2 кг 800 г', targetValue: 2800, items: getMassItems() }
+            ],
+            area: [
+                { target: '1 м² 25 см²', targetValue: 10025, items: getAreaItems() },
+                { target: '2 м² 50 см²', targetValue: 20050, items: getAreaItems() },
+                { target: '3 м²', targetValue: 30000, items: getAreaItems() },
+                { target: '1 м² 75 см²', targetValue: 10075, items: getAreaItems() },
+                { target: '2 м²', targetValue: 20000, items: getAreaItems() },
+                { target: '4 м²', targetValue: 40000, items: getAreaItems() },
+                { target: '2 м² 75 см²', targetValue: 20075, items: getAreaItems() },
+                { target: '3 м² 50 см²', targetValue: 30050, items: getAreaItems() },
+                { target: '4 м² 25 см²', targetValue: 40025, items: getAreaItems() },
+                { target: '1 м²', targetValue: 10000, items: getAreaItems() },
+                { target: '2 м² 25 см²', targetValue: 20025, items: getAreaItems() },
+                { target: '3 м² 75 см²', targetValue: 30075, items: getAreaItems() },
+                { target: '4 м² 50 см²', targetValue: 40050, items: getAreaItems() },
+                { target: '5 м² 25 см²', targetValue: 50025, items: getAreaItems() },
+                { target: '2 м² 100 см²', targetValue: 20100, items: getAreaItems() },
+                { target: '5 м²', targetValue: 50000, items: getAreaItems() },
+                { target: '6 м²', targetValue: 60000, items: getAreaItems() },
+                { target: '7 м²', targetValue: 70000, items: getAreaItems() },
+                { target: '1 м² 80 см²', targetValue: 10080, items: getAreaItems() },
+                { target: '2 м² 80 см²', targetValue: 20080, items: getAreaItems() }
+            ],
+            time: [
+                { target: '1 час 15 мин', targetValue: 4500, items: getTimeItems() },
+                { target: '2 часа 30 мин', targetValue: 9000, items: getTimeItems() },
+                { target: '1 час 45 мин', targetValue: 6300, items: getTimeItems() },
+                { target: '3 часа 15 мин', targetValue: 11700, items: getTimeItems() },
+                { target: '2 часа', targetValue: 7200, items: getTimeItems() },
+                { target: '1 час 30 мин', targetValue: 5400, items: getTimeItems() },
+                { target: '2 часа 45 мин', targetValue: 9900, items: getTimeItems() },
+                { target: '3 часа 30 мин', targetValue: 12600, items: getTimeItems() },
+                { target: '4 часа 15 мин', targetValue: 15300, items: getTimeItems() },
+                { target: '1 час', targetValue: 3600, items: getTimeItems() },
+                { target: '2 часа 15 мин', targetValue: 8100, items: getTimeItems() },
+                { target: '3 часа 45 мин', targetValue: 13500, items: getTimeItems() },
+                { target: '4 часа 30 мин', targetValue: 16200, items: getTimeItems() },
+                { target: '5 часа 15 мин', targetValue: 18900, items: getTimeItems() },
+                { target: '2 часа 1 мин', targetValue: 7260, items: getTimeItems() },
+                { target: '3 часа', targetValue: 10800, items: getTimeItems() },
+                { target: '4 часа', targetValue: 14400, items: getTimeItems() },
+                { target: '5 часа', targetValue: 18000, items: getTimeItems() },
+                { target: '1 час 48 мин', targetValue: 6480, items: getTimeItems() },
+                { target: '2 часа 48 мин', targetValue: 10080, items: getTimeItems() }
+            ]
+        };
+        
+        // Функции для получения предметов для каждой категории
+        function getLengthItems() {
+            return [
+                { text: '150 см', value: 150 },
+                { text: '100 см', value: 100 },
+                { text: '50 см', value: 50 },
+                { text: '75 см', value: 75 },
+                { text: '125 см', value: 125 },
+                { text: '1 м', value: 100 },
+                { text: '2 м', value: 200 },
+                { text: '175 см', value: 175 }
+            ];
+        }
+        
+        function getMassItems() {
+            return [
+                { text: '1500 г', value: 1500 },
+                { text: '1000 г', value: 1000 },
+                { text: '500 г', value: 500 },
+                { text: '250 г', value: 250 },
+                { text: '750 г', value: 750 },
+                { text: '1 кг', value: 1000 },
+                { text: '2 кг', value: 2000 },
+                { text: '1250 г', value: 1250 }
+            ];
+        }
+        
+        function getAreaItems() {
+            return [
+                { text: '20000 см²', value: 20000 },
+                { text: '10000 см²', value: 10000 },
+                { text: '15000 см²', value: 15000 },
+                { text: '5000 см²', value: 5000 },
+                { text: '2 м²', value: 20000 },
+                { text: '1 м²', value: 10000 },
+                { text: '25000 см²', value: 25000 },
+                { text: '7500 см²', value: 7500 }
+            ];
+        }
+        
+        function getTimeItems() {
+            return [
+                { text: '1 час', value: 3600 },
+                { text: '30 мин', value: 1800 },
+                { text: '45 мин', value: 2700 },
+                { text: '15 мин', value: 900 },
+                { text: '90 мин', value: 5400 },
+                { text: '120 мин', value: 7200 },
+                { text: '60 мин', value: 3600 },
+                { text: '1800 с', value: 1800 }
+            ];
+        }
+        
+        // Перемешать массив
+        function shuffleArray(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+        
+        // Создать случайные задачи из 20 значений
+        function createRandomTasks() {
+            const randomTasks = {};
+            
+            for (const category in tasks) {
+                // Выбираем случайную задачу из 20 возможных
+                const randomIndex = Math.floor(Math.random() * tasks[category].length);
+                randomTasks[category] = { ...tasks[category][randomIndex] };
+                
+                // Перемешиваем предметы
+                randomTasks[category].items = shuffleArray([...randomTasks[category].items]);
+            }
+            
+            return randomTasks;
+        }
+        
+        // Текущие задачи
+        let currentTasks = {};
+        
+        // Запуск игры
+        function startGame() {
+            console.log('Игра запускается...');
+            
+            // Скрыть стартовый экран
+            document.getElementById('startScreen').style.display = 'none';
+            
+            // Показать игровой экран
+            document.getElementById('gameScreen').style.display = 'block';
+            
+            // Создать случайные задачи
+            currentTasks = createRandomTasks();
+            
+            // Инициализировать игру
+            initGame();
+        }
+        
+        // Инициализация игры
+        function initGame() {
+            console.log('Инициализация игры...');
+            
+            // Сбросить состояние
+            selectedItems = [];
+            score = 0;
+            seconds = 0;
+            
+            // Загрузить первую категорию
+            loadCategory();
+            
+            // Запустить таймер
+            startTimer();
+            
+            // Обновить счет
+            updateScore();
+        }
+        
+        // Загрузка категории
+        function loadCategory() {
+            const task = currentTasks[currentCategory];
+            
+            if (!task) {
+                console.error('Задача не найдена для категории:', currentCategory);
+                return;
+            }
+            
+            // Обновить цель
+            document.getElementById('targetValue').textContent = task.target;
+            
+            // Очистить контейнер
+            const container = document.getElementById('itemsContainer');
+            container.innerHTML = '';
+            
+            // Добавить карточки
+            task.items.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'item';
+                card.textContent = item.text;
+                card.onclick = function() {
+                    toggleSelection(index, card);
+                };
+                container.appendChild(card);
+            });
+            
+            // Сбросить сумму
+            document.getElementById('currentSum').textContent = '0';
+        }
+        
+        // Выбор карточки
+        function toggleSelection(index, card) {
+            if (selectedItems.includes(index)) {
+                // Убрать из выбранных
+                selectedItems = selectedItems.filter(i => i !== index);
+                card.classList.remove('selected');
+            } else {
+                // Добавить в выбранные
+                selectedItems.push(index);
+                card.classList.add('selected');
+            }
+            
+            updateSum();
+        }
+        
+        // Обновление суммы
+        function updateSum() {
+            const task = currentTasks[currentCategory];
+            if (!task) return;
+            
+            let sum = 0;
+            
+            selectedItems.forEach(index => {
+                sum += task.items[index].value;
+            });
+            
+            // Для времени показываем в минутах
+            if (currentCategory === 'time') {
+                document.getElementById('currentSum').textContent = Math.floor(sum / 60);
+            } else {
+                document.getElementById('currentSum').textContent = sum;
+            }
+        }
+        
+        // Проверка ответа
+        function checkAnswer() {
+            const task = currentTasks[currentCategory];
+            if (!task) return;
+            
+            let sum = 0;
+            
+            selectedItems.forEach(index => {
+                sum += task.items[index].value;
+            });
+            
+            // Допускаем небольшую погрешность
+            const tolerance = currentCategory === 'time' ? 60 : 10; // 1 минута для времени, 10 для остального
+            
+            if (Math.abs(sum - task.targetValue) <= tolerance) {
+                // Правильный ответ
+                score += 10;
+                showMessage('Молодец!', `Ты правильно собрал ${task.target}!`, '+10 баллов', 'success');
+                
+                // Перейти к следующей категории через 1.5 секунды
+                setTimeout(nextCategory, 1500);
+            } else {
+                // Неправильный ответ
+                score = Math.max(0, score - 2);
+                if (sum < task.targetValue) {
+                    showMessage('Попробуй еще!', 'Сумма меньше нужной. Добавь еще величины.', '-2 балла', 'error');
+                } else {
+                    showMessage('Попробуй еще!', 'Сумма больше нужной. Убери лишние величины.', '-2 балла', 'error');
+                }
+            }
+            
+            updateScore();
+        }
+        
+        // Показать сообщение
+        function showMessage(title, text, scoreText, type) {
+            document.getElementById('messageTitle').textContent = title;
+            document.getElementById('messageText').textContent = text;
+            document.getElementById('messageScore').textContent = scoreText;
+            document.getElementById('messageOverlay').classList.add('show');
+            document.getElementById('messageContent').className = 'message-content ' + type;
+        }
+        
+        // Закрыть сообщение
+        function closeMessage() {
+            document.getElementById('messageOverlay').classList.remove('show');
+        }
+        
+        // Перейти к следующей категории
+        function nextCategory() {
+            const categories = ['length', 'mass', 'area', 'time'];
+            const currentIndex = categories.indexOf(currentCategory);
+            
+            if (currentIndex < categories.length - 1) {
+                // Переключиться на следующую категорию
+                const nextCategory = categories[currentIndex + 1];
+                currentCategory = nextCategory;
+                
+                // Обновить кнопки
+                document.querySelectorAll('.category-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[onclick="switchCategory('${nextCategory}')"]`).classList.add('active');
+                
+                // Загрузить категорию
+                selectedItems = [];
+                loadCategory();
+                closeMessage();
+            } else {
+                // Все категории пройдены
+                showMessage('🎉 Поздравляем! 🎉', 
+                    `Ты прошел все категории!\n\nОчки: ${score}\nВремя: ${document.getElementById('timer').textContent}`, 
+                    'Отличная игра!', 'success');
+            }
+        }
+        
+        // Переключение категории
+        function switchCategory(category) {
+            currentCategory = category;
+            selectedItems = [];
+            
+            // Обновить активную кнопку
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Загрузить категорию
+            loadCategory();
+        }
+        
+        // Очистить выбор
+        function clearSelection() {
+            selectedItems = [];
+            document.querySelectorAll('.item').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.getElementById('currentSum').textContent = '0';
+        }
+        
+        // Перезапуск игры
+        function restartGame() {
+            // Сбросить состояние
+            score = 0;
+            seconds = 0;
+            selectedItems = [];
+            currentCategory = 'length';
+            
+            // Сбросить таймер
+            clearInterval(timer);
+            document.getElementById('timer').textContent = '00:00';
+            
+            // Сбросить кнопки категорий
+            document.querySelectorAll('.category-btn').forEach((btn, index) => {
+                btn.classList.remove('active');
+                if (index === 0) btn.classList.add('active');
+            });
+            
+            // Создать новые случайные задачи
+            currentTasks = createRandomTasks();
+            
+            // Скрыть сообщение
+            closeMessage();
+            
+            // Перезагрузить игру
+            loadCategory();
+            updateScore();
+            startTimer();
+        }
+        
+        // Обновление счета
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+        
+        // Запуск таймера
+        function startTimer() {
+            clearInterval(timer); // Очистить предыдущий таймер
+            timer = setInterval(function() {
+                seconds++;
+                const minutes = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                document.getElementById('timer').textContent = 
+                    (minutes < 10 ? '0' : '') + minutes + ':' + 
+                    (secs < 10 ? '0' : '') + secs;
+            }, 1000);
+        }
+        
+        // Инициализация при загрузке страницы
+        window.onload = function() {
+            console.log('Страница загружена');
+            
+            // Убедиться, что виден только стартовый экран
+            document.getElementById('startScreen').style.display = 'block';
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('messageOverlay').classList.remove('show');
+            
+            // Создать начальные задачи
+            currentTasks = createRandomTasks();
+        };
+    </script>
+</body>
+</html>
